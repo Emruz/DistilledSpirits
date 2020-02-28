@@ -26,26 +26,25 @@ from sendgrid.helpers.mail import Mail
 # -----------------------------------------------------------------------------
 # Variable Declarations
 sender = 'Shaq <shahin@pirooz.net>'
-receiver = ['shahin@emruz.com','scott@stephensongroup.net']
+receiver = ['shahinpirooz@gmail.com']
+#receiver = ['shahinpirooz@gmail.com','scott@stephensongroup.net']
 subject = "Shaq's Distilled List - {}".format(datetime.date.today())
-url = "https://www.klwines.com/Products?&filters=sv2_dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,9.or,24.or,27.or,48!90$eq$1$True$ff-90-1--$or,61$eq$1$True$ff-61-1--$&orderBy=60%20asc,search.score()%20desc"
+url = [
+    "https://www.klwines.com/Products?&filters=sv2_dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,search.score()%20desc",
+    "https://www.klwines.com/Products?&filters=sv2_206!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!dflt-stock-instock&limit=50&offset=0&orderBy=60%20asc,search.score()%20desc&searchText=ardbeg"
+]
 apiKey = os.environ.get('SENDGRID_API_KEY', None)
 
 # =============================================================================
 # Functions
 # -----------------------------------------------------------------------------
-def GetDistilledList():
-    request = requests.get(url)
-    content = request.content
-    soup = BeautifulSoup(content, "html.parser")
-    element = soup.find("div", {"class": "results-block clearfix"})
-    
+def GetDistilledList():    
     htmlHeader = """\
     <html lang="en">
        <head>
           <meta charset="UTF-8">
         <base href="https://www.klwines.com/" target="_blank">
-           <title>K&L's Distilled Spirits List</title>
+           <title>Shaq's Distilled List</title>
        </head>
        <body>
     """
@@ -56,11 +55,12 @@ def GetDistilledList():
     </html>
     
     """
-
+    content = ""
     # -------------------------------------------------------------------------
     # div = "<div class="results-block clearfix">"
-    request = requests.get(url)
-    content = request.content
+    for r in url:
+        request = requests.get(url)
+        content += request.content
     soup = BeautifulSoup(content, "html.parser")
     element = soup.find("div", {"class": "results-block clearfix"})
 
