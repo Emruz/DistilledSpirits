@@ -26,14 +26,14 @@ from sendgrid.helpers.mail import Mail
 # -----------------------------------------------------------------------------
 # Variable Declarations
 sender = 'Shaq <shahin@pirooz.net>'
-receiver = ['shahinpirooz@gmail.com']
+#receiver = ['shahinpirooz@gmail.com']
 #receiver = ['shahinpirooz@gmail.com','scott@stephensongroup.net']
+receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com']
 subject = "Shaq's Distilled List - {}".format(datetime.date.today())
-url = [
-    "https://www.klwines.com/Products?&filters=sv2_dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,search.score()%20desc",
-    "https://www.klwines.com/Products?&filters=sv2_206!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!dflt-stock-instock&limit=50&offset=0&orderBy=60%20asc,search.score()%20desc&searchText=ardbeg"
-]
+baseurl = "https://www.klwines.com/Products?&filters=sv2_dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,search.score()%20desc"
+ardbeg = "https://www.klwines.com/Products?&filters=sv2_206!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!dflt-stock-instock&limit=50&offset=0&orderBy=60%20asc,search.score()%20desc&searchText=ardbeg"
 apiKey = os.environ.get('SENDGRID_API_KEY', None)
+url = ardbeg
 
 # =============================================================================
 # Functions
@@ -58,9 +58,8 @@ def GetDistilledList():
     content = ""
     # -------------------------------------------------------------------------
     # div = "<div class="results-block clearfix">"
-    for r in url:
-        request = requests.get(url)
-        content += request.content
+    request = requests.get(url)
+    content = request.content
     soup = BeautifulSoup(content, "html.parser")
     element = soup.find("div", {"class": "results-block clearfix"})
 
