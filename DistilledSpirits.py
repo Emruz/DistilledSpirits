@@ -192,8 +192,9 @@ def GetDistilledList():
     productList = soup.find("div", id="ProductList")
     
     
-#    //*[@id="ProductList"]/ul/li[1]/div/div/a/p[2]
-    
+#    timestamp //*[@id="ProductList"]/ul/li[1]/div/div/a/p[2]
+#              //*[@id="ProductList"]/ul/li[2]/div/div/a/p[2]
+#              /html/body/div[1]/div[2]/div[2]/ul/li[2]/div/div/a/p[2]    
 #    for product in productList.find_next_siblings:
 #        eTime = product.find("p": {"class": "ui-li-desc formatDate "}).value
 #        elementTimestamp = dateutil.parser.parse(eTime)
