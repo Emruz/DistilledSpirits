@@ -17,8 +17,8 @@
 #
 # -----------------------------------------------------------------------------
 # Imports
+from lxml import html, etree
 import os, requests, datetime, dateutil.parser
-from bs4 import BeautifulSoup
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
@@ -28,7 +28,6 @@ from sendgrid.helpers.mail import Mail
 startTime = datetime.datetime.now()
 lastRun  = startTime - datetime.timedelta(minutes = 5)
 apiKey = os.environ.get('SENDGRID_API_KEY', None)
-url = "https://m.klwines.com/Products?&filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText="
 
 sender = 'Shaq <shahin@pirooz.net>'
 receiver = ['shahinpirooz@gmail.com']
@@ -182,39 +181,46 @@ def GetDistilledList():
 																		</body>
 																	</html>
     """
-    content = ""
+
+    url = "https://m.klwines.com/Products?&filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText="
+    output = []
+    
     # -------------------------------------------------------------------------
-    # div = "<div class="results-block clearfix">"
-    request = requests.get(url)
-    content = request.content
-    soup = BeautifulSoup(content, "html.parser")
-#    print(soup.prettify())
-    productList = soup.find("div", id="ProductList")
+    page = requests.get(url)
+    tree = html.fromstring(page.content)
+    productList = tree.xpath('//*[@id="ProductList"]/ul//li')
+   
     
+    #    timestamp //*[@id="ProductList"]/ul/li[1]/div/div/a/p[2]
+    #              //*[@id="ProductList"]/ul/li[2]/div/div/a/p[2]
+    #              /html/body/div[1]/div[2]/div[2]/ul/li[2]/div/div/a/p[2]    
+    for e in productList:
+        eTime = e.xpath('div/div/a/p[2]/text()')[0]
+        #print(eTime)
+        elementTimestamp = dateutil.parser.parse(eTime)
+        print(f"thisRun: {startTime}\nlastRun: {lastRun}\neTime: {elementTimestamp}")
+        if elementTimestamp > lastRun:
+            output.append(str(etree.tostring(e), 'utf-8'))
     
-#    timestamp //*[@id="ProductList"]/ul/li[1]/div/div/a/p[2]
-#              //*[@id="ProductList"]/ul/li[2]/div/div/a/p[2]
-#              /html/body/div[1]/div[2]/div[2]/ul/li[2]/div/div/a/p[2]    
-#    for product in productList.find_next_siblings:
-#        eTime = product.find("p": {"class": "ui-li-desc formatDate "}).value
-#        elementTimestamp = dateutil.parser.parse(eTime)
-#        if elementTimestamp > lastRun:
-#            output = output + product
+    print(output)
+    products = "<ul>"
+    products += ''.join(output)
+    products += "</ul>"
         
-    html = htmlHeader + str(productList) + htmlFooter
-    return html
+    htmlString = htmlHeader + str(products) + htmlFooter
+    return htmlString
 
 # =============================================================================
 # Main Function
 def main():
     # -------------------------------------------------------------------------
     # Send the message via SendGrid API.
-    html = GetDistilledList()
+    htmlString = GetDistilledList()
     message = Mail(
         from_email=sender,
         to_emails=receiver,
         subject=subject,
-        html_content=html)
+        html_content=htmlString)
 
     if apiKey is not None:
         try:
