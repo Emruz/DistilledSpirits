@@ -25,8 +25,10 @@ from sendgrid.helpers.mail import Mail
 
 # -----------------------------------------------------------------------------
 # Variable Declarations
+timeScale = "minutes"
+timeSpan = 5
 startTime = datetime.datetime.now()
-lastRun  = startTime - datetime.timedelta(minutes = 5)
+lastRun  = startTime - datetime.timedelta(minutes = timeSpan)
 apiKey = os.environ.get('SENDGRID_API_KEY', None)
 
 sender = 'Shaq <shahin@pirooz.net>'
@@ -184,6 +186,8 @@ def GetDistilledList():
 
     url = "https://m.klwines.com/Products?&filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText="
     output = []
+    productCount = 0
+    products = ""
     
     # -------------------------------------------------------------------------
     page = requests.get(url)
@@ -198,17 +202,26 @@ def GetDistilledList():
         eTime = e.xpath('div/div/a/p[2]/text()')[0]
         #print(eTime)
         elementTimestamp = dateutil.parser.parse(eTime)
-        print(f"thisRun: {startTime}\nlastRun: {lastRun}\neTime: {elementTimestamp}")
+        print(f"thisRun : {startTime}\nlastRun : {lastRun}\neTime   : {elementTimestamp}")
         if elementTimestamp > lastRun:
+            productCount +=1
+            print(productCount)
             output.append(str(etree.tostring(e), 'utf-8'))
-    
-    print(output)
-    products = "<ul>"
-    products += ''.join(output)
-    products += "</ul>"
+                
+    if productCount > 0:    
+        products = "<ul>"
+        products += ''.join(output)
+        products += "</ul>"
         
-    htmlString = htmlHeader + str(products) + htmlFooter
-    return htmlString
+        print(products)
+    
+    print(f"{productCount} new products in the last {timeSpan} {timeScale}")
+        
+    if productCount > 0:
+        htmlString = htmlHeader + str(products) + htmlFooter
+        return htmlString
+    else:
+        return None
 
 # =============================================================================
 # Main Function
@@ -222,7 +235,7 @@ def main():
         subject=subject,
         html_content=htmlString)
 
-    if apiKey is not None:
+    if apiKey is not None and htmlString is not None:
         try:
             sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
             response = sg.send(message)
