@@ -13,12 +13,15 @@
 # =============================================================================
 # Change History
 # Date        Notes
-# 20191201    Initial Version
+# 20200229    Initial Version
+# 20200306    Initial release
 #
 # -----------------------------------------------------------------------------
 # Imports
 from lxml import html, etree
-import os, requests, datetime, dateutil.parser
+import os, os.path, requests, time
+from datetime import datetime
+from dateutil import tz
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
@@ -27,13 +30,20 @@ from sendgrid.helpers.mail import Mail
 # Variable Declarations
 timeScale = "minutes"
 timeSpan = 5
-startTime = datetime.datetime.now()
-lastRun  = startTime - datetime.timedelta(minutes = timeSpan)
+startTime = datetime.now()
+logfile = "getDistilledList.log"
+lastRun = time.ctime(os.path.getmtime(logfile))
+
+#Auto-detect zones:
+from_zone = tz.tzutc()
+to_zone = tz.tzlocal()
+
 apiKey = os.environ.get('SENDGRID_API_KEY', None)
 
 sender = 'Shaq <shahin@pirooz.net>'
-receiver = ['shahinpirooz@gmail.com']
+#receiver = ['shahinpirooz@gmail.com']
 #receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net']
+receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net']
 subject = "Shaq's Distilled List - {}".format(startTime.strftime("%b %d, %Y %I:%M %p"))
 
 # =============================================================================
@@ -200,10 +210,19 @@ def GetDistilledList():
     #              /html/body/div[1]/div[2]/div[2]/ul/li[2]/div/div/a/p[2]    
     for e in productList:
         eTime = e.xpath('div/div/a/p[2]/text()')[0]
-        #print(eTime)
-        elementTimestamp = dateutil.parser.parse(eTime)
-        print(f"thisRun : {startTime}\nlastRun : {lastRun}\neTime   : {elementTimestamp}")
-        if elementTimestamp > lastRun:
+        # utc = datetime.utcnow()
+        eTimeutc = datetime.strptime(eTime, '%m/%d/%Y %I:%M %p')
+        lastRunTimestamp = datetime.strptime(lastRun, '%a %b %d %H:%M:%S %Y')
+        
+        # Tell the datetime object that it's in UTC time zone since 
+        # datetime objects are 'naive' by default
+        eTimeutc = eTimeutc.replace(tzinfo=from_zone)
+        
+        # Convert time zone
+        lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
+        elementTimestamp = eTimeutc.astimezone(to_zone)
+        print(f"thisRun : {startTime}\nlastRun : {lastRunTimestamp}\neTime   : {elementTimestamp}")
+        if elementTimestamp > lastRunTimestamp:
             productCount +=1
             print(productCount)
             output.append(str(etree.tostring(e), 'utf-8'))
@@ -245,7 +264,8 @@ def main():
         except Exception as e:
             print(e)
     else:
-        print(f'The Sendgrid API key is: {apiKey}')
+        if apiKey is None:
+            print("Something went foobar with the API Key!")
 
 if __name__ == '__main__':
     main() 
