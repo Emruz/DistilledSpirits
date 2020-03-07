@@ -20,7 +20,7 @@
 # Imports
 from lxml import html, etree
 import os, os.path, requests, time
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import tz
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -32,7 +32,8 @@ timeScale = "minutes"
 timeSpan = 5
 startTime = datetime.now()
 logfile = "getDistilledList.log"
-lastRun = time.ctime(os.path.getmtime(logfile))
+lastRun  = startTime - timedelta(minutes = timeSpan)
+#lastRun = time.ctime(os.path.getmtime(logfile))
 
 #Auto-detect zones:
 from_zone = tz.tzutc()
@@ -212,8 +213,9 @@ def GetDistilledList():
         eTime = e.xpath('div/div/a/p[2]/text()')[0]
         # utc = datetime.utcnow()
         eTimeutc = datetime.strptime(eTime, '%m/%d/%Y %I:%M %p')
-        lastRunTimestamp = datetime.strptime(lastRun, '%a %b %d %H:%M:%S %Y')
-        
+        #lastRunTimestamp = datetime.strptime(lastRun, '%a %b %d %H:%M:%S %Y')
+        lastRunTimestamp = lastRun
+
         # Tell the datetime object that it's in UTC time zone since 
         # datetime objects are 'naive' by default
         eTimeutc = eTimeutc.replace(tzinfo=from_zone)
