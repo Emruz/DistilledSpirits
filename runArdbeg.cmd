@@ -1,1 +1,1 @@
-c:\ProgramData\Anaconda3\python.exe "C:\Users\Shahin Pirooz\Projects\DistilledSpirits\DistilledSpirits.Ardbeg.py"
+c:\Conda\python.exe "C:\Users\Shahin Pirooz\Projects\DistilledSpirits\DistilledSpirits.Ardbeg.py" >> "C:\Users\Shahin Pirooz\Projects\DistilledSpirits\getDistilledList.log

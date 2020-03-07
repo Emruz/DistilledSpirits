@@ -1,0 +1,1 @@
+c:\Conda\python.exe "C:\Users\Shahin Pirooz\Projects\DistilledSpirits\DistilledSpirits.py" >> "C:\Users\Shahin Pirooz\Projects\DistilledSpirits\getDistilledList.log
