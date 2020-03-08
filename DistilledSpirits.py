@@ -19,8 +19,8 @@
 # -----------------------------------------------------------------------------
 # Imports
 from lxml import html, etree
-import os, os.path, requests, time
-from datetime import datetime, timedelta
+import os, requests, time
+from datetime import datetime
 from dateutil import tz
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -28,12 +28,14 @@ from sendgrid.helpers.mail import Mail
 
 # -----------------------------------------------------------------------------
 # Variable Declarations
-timeScale = "minutes"
-timeSpan = 5
 startTime = datetime.now()
 logfile = "getDistilledList.log"
-lastRun  = startTime - timedelta(minutes = timeSpan)
-#lastRun = time.ctime(os.path.getmtime(logfile))
+touchfile = "touch.file"
+timeScale = "minutes"
+#timeSpan = 5
+#lastRun  = startTime - timedelta(minutes = timeSpan)
+lastRun = time.ctime(os.path.getmtime(touchfile))
+
 
 #Auto-detect zones:
 from_zone = tz.tzutc()
@@ -41,10 +43,10 @@ to_zone = tz.tzlocal()
 
 apiKey = os.environ.get('SENDGRID_API_KEY', None)
 
-sender = 'Shaq <shahin@pirooz.net>'
-#receiver = ['shahinpirooz@gmail.com']
+sender = 'Shaq <shaq@emruz.com>'
+receiver = ['shahinpirooz@gmail.com']
 #receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net']
-receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net']
+#receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net']
 subject = "Shaq's Distilled List - {}".format(startTime.strftime("%b %d, %Y %I:%M %p"))
 
 # =============================================================================
@@ -210,25 +212,32 @@ def GetDistilledList():
     #              //*[@id="ProductList"]/ul/li[2]/div/div/a/p[2]
     #              /html/body/div[1]/div[2]/div[2]/ul/li[2]/div/div/a/p[2]    
     for e in productList:
-        eTime = e.xpath('div/div/a/p[2]/text()')[0]
+        eTimeRoot = e.xpath('div/div/a/p[2]')
+        eTime = eTimeRoot[0].text
         # utc = datetime.utcnow()
         eTimeutc = datetime.strptime(eTime, '%m/%d/%Y %I:%M %p')
-        #lastRunTimestamp = datetime.strptime(lastRun, '%a %b %d %H:%M:%S %Y')
-        lastRunTimestamp = lastRun
 
         # Tell the datetime object that it's in UTC time zone since 
         # datetime objects are 'naive' by default
         eTimeutc = eTimeutc.replace(tzinfo=from_zone)
         
+        # Convert lastRun and determine the time between runs.
+        lastRunTimestamp = datetime.strptime(lastRun, '%a %b %d %H:%M:%S %Y')
+        timeSpan = startTime - lastRunTimestamp
+
         # Convert time zone
         lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
         elementTimestamp = eTimeutc.astimezone(to_zone)
-        print(f"thisRun : {startTime}\nlastRun : {lastRunTimestamp}\neTime   : {elementTimestamp}")
+        strElementTimestamp = elementTimestamp.strftime("%m/%d/%Y %I:%M %p")
+        print(f'thisRun    : {startTime.strftime("%m/%d/%Y %I:%M %p")}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}')
+        print(f'eTime      : {eTime}\neTimestamp : {strElementTimestamp}\n')
         if elementTimestamp > lastRunTimestamp:
             productCount +=1
             print(productCount)
+            eTimeRoot[0].text = strElementTimestamp
+            #eTimeRoot[0].value = strElementTimestamp
             output.append(str(etree.tostring(e), 'utf-8'))
-                
+
     if productCount > 0:    
         products = "<ul>"
         products += ''.join(output)
@@ -236,7 +245,9 @@ def GetDistilledList():
         
         print(products)
     
-    print(f"{productCount} new products in the last {timeSpan} {timeScale}")
+    #print(f"{productCount} new products in the last {timeSpan} {timeScale}")
+    print(f'Last check at {lastRun}:')
+    print(f'Found {productCount} new products in the last {timeSpan.total_seconds()/60:.2f} minutes')
         
     if productCount > 0:
         htmlString = htmlHeader + str(products) + htmlFooter
@@ -263,6 +274,7 @@ def main():
             print(response.status_code)
             print(response.body)
             print(response.headers)
+            os.utime(touchfile, None)
         except Exception as e:
             print(e)
     else:

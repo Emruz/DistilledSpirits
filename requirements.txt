@@ -1,4 +1,6 @@
-requests
-beautifulsoup4
-sendgrid-python
-sendgrid
+from lxml import html, etree
+import os, os.path, requests, time
+from datetime import datetime, timedelta
+from dateutil import tz
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import Mail
