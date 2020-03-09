@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # =============================================================================
 """
-@title: GetDistilledList.py
+@title: testGetList.py
 @credits: Shahin Pirooz
 @company: Emruz
 @created: Mon Dec  2 16:01:13 2019

@@ -44,9 +44,9 @@ to_zone = tz.tzlocal()
 apiKey = os.environ.get('SENDGRID_API_KEY', None)
 
 sender = 'Shaq <shaq@emruz.com>'
-receiver = ['shahinpirooz@gmail.com']
+#receiver = ['shahinpirooz@gmail.com']
 #receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net']
-#receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net']
+receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net']
 subject = "Shaq's Distilled List - {}".format(startTime.strftime("%b %d, %Y %I:%M %p"))
 
 # =============================================================================
@@ -197,8 +197,12 @@ def GetDistilledList():
 																	</html>
     """
 
-    url = "https://m.klwines.com/Products?&filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText="
+    other =                "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!27!90$eq$1$True$ff-90-1--$&limit=50&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText="
+    urlBourbonMaltScotch = "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc"
+    urlBourbonMaltRyeScoth = "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc"
+    url = urlBourbonMaltRyeScoth
     output = []
+    elementCount = 0
     productCount = 0
     products = ""
     
@@ -206,11 +210,21 @@ def GetDistilledList():
     page = requests.get(url)
     tree = html.fromstring(page.content)
     productList = tree.xpath('//*[@id="ProductList"]/ul//li')
-   
+    elementCount = len(productList)
     
-    #    timestamp //*[@id="ProductList"]/ul/li[1]/div/div/a/p[2]
-    #              //*[@id="ProductList"]/ul/li[2]/div/div/a/p[2]
+
+    # Convert lastRun and determine the time between runs.
+    lastRunTimestamp = datetime.strptime(lastRun, '%a %b %d %H:%M:%S %Y')
+    timeSpan = startTime - lastRunTimestamp
+
+    # Convert time zone
+    lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
+
+    #print out the comparisions from this run
+    print(f'thisRun    : {startTime.strftime("%m/%d/%Y %I:%M %p")}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}\n')
+
     #              /html/body/div[1]/div[2]/div[2]/ul/li[2]/div/div/a/p[2]    
+    #    timestamp //*[@id="ProductList"]/ul/li[1]/div/div/a/p[2]
     for e in productList:
         eTimeRoot = e.xpath('div/div/a/p[2]')
         eTime = eTimeRoot[0].text
@@ -221,23 +235,22 @@ def GetDistilledList():
         # datetime objects are 'naive' by default
         eTimeutc = eTimeutc.replace(tzinfo=from_zone)
         
-        # Convert lastRun and determine the time between runs.
-        lastRunTimestamp = datetime.strptime(lastRun, '%a %b %d %H:%M:%S %Y')
-        timeSpan = startTime - lastRunTimestamp
-
         # Convert time zone
-        lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
         elementTimestamp = eTimeutc.astimezone(to_zone)
         strElementTimestamp = elementTimestamp.strftime("%m/%d/%Y %I:%M %p")
-        print(f'thisRun    : {startTime.strftime("%m/%d/%Y %I:%M %p")}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}')
-        print(f'eTime      : {eTime}\neTimestamp : {strElementTimestamp}\n')
+        
+        #print out the comparisions to this run
+        print(f'eTime      : {eTime}\neTimestamp : {strElementTimestamp}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}\n')
+
+        #if there is a new product, let's add it to the output list and increment the counter
         if elementTimestamp > lastRunTimestamp:
             productCount +=1
-            print(productCount)
             eTimeRoot[0].text = strElementTimestamp
             #eTimeRoot[0].value = strElementTimestamp
             output.append(str(etree.tostring(e), 'utf-8'))
+            print(f'{productCount} of {elementCount} added to output')
 
+    #if we found new products, let's build the product content for the email
     if productCount > 0:    
         products = "<ul>"
         products += ''.join(output)
@@ -247,9 +260,9 @@ def GetDistilledList():
     
     #print(f"{productCount} new products in the last {timeSpan} {timeScale}")
     print(f'Last check at {lastRun}:')
-    print(f'Found {productCount} new products in the last {timeSpan.total_seconds()/60:.2f} minutes')
+    print(f'{productCount} out of {elementCount} products are new in the last {timeSpan.total_seconds()/60:.2f} minutes')
         
-    if productCount > 0:
+    if products:
         htmlString = htmlHeader + str(products) + htmlFooter
         return htmlString
     else:
