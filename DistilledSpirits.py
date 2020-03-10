@@ -21,7 +21,7 @@
 # Imports
 from lxml import html, etree
 import os, requests, time
-from datetime import datetime
+from datetime import datetime, timedelta
 from dateutil import tz
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
@@ -33,17 +33,21 @@ startTime = datetime.now()
 logfile = "getDistilledList.log"
 touchfile = "touch.file"
 timeScale = "minutes"
-#timeSpan = 5
-#lastRun  = startTime - timedelta(minutes = timeSpan)
-lastRun = time.ctime(os.path.getmtime(touchfile))
-
-
 #Auto-detect zones:
 from_zone = tz.tzutc()
 to_zone = tz.tzlocal()
 
-apiKey = os.environ.get('SENDGRID_API_KEY', None)
+testSpan = 0
+# Convert lastRun and determine the time between runs.
+lastRun = time.ctime(os.path.getmtime(touchfile))
+lastRunTimestamp = datetime.strptime(lastRun, '%a %b %d %H:%M:%S %Y')
+lastRunTimestamp  = lastRunTimestamp - timedelta(minutes = testSpan)
 
+# determine time since last run and convert time zone
+timeSpan = startTime - lastRunTimestamp
+lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
+
+apiKey = os.environ.get('SENDGRID_API_KEY', None)
 sender = 'Shaq <shaq@emruz.com>'
 #receiver = ['shahinpirooz@gmail.com']
 #receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com']
@@ -198,12 +202,13 @@ def GetDistilledList():
 																	</html>
     """
 
-    other =                "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!27!90$eq$1$True$ff-90-1--$&limit=50&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText="
-    urlBourbonMaltScotchInstock = "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc"
-    urlBourbonMaltScotch = "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc"
-    urlBourbonMaltRyeScothInstock = "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc"
-    urlBourbonMaltRyeScoth = "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc"
-    url = urlBourbonMaltRyeScoth
+    urls = {
+        'BourbonMaltScotchAll': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc",
+        'BourbonMaltScotchInstock': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc",
+        'BourbonMaltRyeScothAll': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc",
+        'BourbonMaltRyeScothInstock': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc"
+        }
+    url = urls['BourbonMaltRyeScothAll']
     output = []
     elementCount = 0
     productCount = 0
@@ -216,12 +221,6 @@ def GetDistilledList():
     elementCount = len(productList)
     
 
-    # Convert lastRun and determine the time between runs.
-    lastRunTimestamp = datetime.strptime(lastRun, '%a %b %d %H:%M:%S %Y')
-    timeSpan = startTime - lastRunTimestamp
-
-    # Convert time zone
-    lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
 
     #print out the comparisions from this run
     print(f'thisRun    : {startTime.strftime("%m/%d/%Y %I:%M %p")}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}\n')
