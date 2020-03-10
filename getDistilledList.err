@@ -1,0 +1,36 @@
+Traceback (most recent call last):
+  File "/Users/shahin/Projects/DistilledSpirits/DistilledSpirits.py", line 42, in <module>
+    lastRun = time.ctime(os.path.getmtime(touchfile))
+  File "/Users/shahin/opt/anaconda3/lib/python3.7/genericpath.py", line 55, in getmtime
+    return os.stat(filename).st_mtime
+FileNotFoundError: [Errno 2] No such file or directory: 'touch.file'
+Traceback (most recent call last):
+  File "/Users/shahin/Projects/DistilledSpirits/DistilledSpirits.py", line 42, in <module>
+    lastRun = time.ctime(os.path.getmtime(touchfile))
+  File "/Users/shahin/opt/anaconda3/lib/python3.7/genericpath.py", line 55, in getmtime
+    return os.stat(filename).st_mtime
+FileNotFoundError: [Errno 2] No such file or directory: 'touch.file'
+Traceback (most recent call last):
+  File "/Users/shahin/Projects/DistilledSpirits/DistilledSpirits.py", line 42, in <module>
+    lastRun = time.ctime(os.path.getmtime(touchfile))
+  File "/Users/shahin/opt/anaconda3/lib/python3.7/genericpath.py", line 55, in getmtime
+    return os.stat(filename).st_mtime
+FileNotFoundError: [Errno 2] No such file or directory: 'touch.file'
+Traceback (most recent call last):
+  File "/Users/shahin/Projects/DistilledSpirits/DistilledSpirits.py", line 42, in <module>
+    lastRun = time.ctime(os.path.getmtime(touchfile))
+  File "/Users/shahin/opt/anaconda3/lib/python3.7/genericpath.py", line 55, in getmtime
+    return os.stat(filename).st_mtime
+FileNotFoundError: [Errno 2] No such file or directory: 'touch.file'
+Traceback (most recent call last):
+  File "/Users/shahin/Projects/DistilledSpirits/DistilledSpirits.py", line 42, in <module>
+    lastRun = time.ctime(os.path.getmtime(touchfile))
+  File "/Users/shahin/opt/anaconda3/lib/python3.7/genericpath.py", line 55, in getmtime
+    return os.stat(filename).st_mtime
+FileNotFoundError: [Errno 2] No such file or directory: 'touch.file'
+Traceback (most recent call last):
+  File "/Users/shahin/Projects/DistilledSpirits/DistilledSpirits.py", line 42, in <module>
+    lastRun = time.ctime(os.path.getmtime(touchfile))
+  File "/Users/shahin/opt/anaconda3/lib/python3.7/genericpath.py", line 55, in getmtime
+    return os.stat(filename).st_mtime
+FileNotFoundError: [Errno 2] No such file or directory: 'touch.file'

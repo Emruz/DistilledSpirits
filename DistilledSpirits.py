@@ -30,8 +30,8 @@ from sendgrid.helpers.mail import Mail
 # -----------------------------------------------------------------------------
 # Variable Declarations
 startTime = datetime.now()
-logfile = "getDistilledList.log"
-touchfile = "touch.file"
+logfile = "/Users/shahin/Projects/DistilledSpirits/DSList.log"
+touchfile = "/Users/shahin/Projects/DistilledSpirits/touch.file"
 timeScale = "minutes"
 #Auto-detect zones:
 from_zone = tz.tzutc()
