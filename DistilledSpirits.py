@@ -267,8 +267,10 @@ def GetDistilledList():
         
     if products:
         htmlString = htmlHeader + str(products) + htmlFooter
+        print(f'found {prodcutCount} products to send')
         return htmlString
     else:
+        print(f'nothing to send!')
         return None
 
 # =============================================================================
