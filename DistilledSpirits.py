@@ -45,8 +45,8 @@ apiKey = os.environ.get('SENDGRID_API_KEY', None)
 
 sender = 'Shaq <shaq@emruz.com>'
 #receiver = ['shahinpirooz@gmail.com']
-#receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net']
-receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net']
+#receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com']
+receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com']
 subject = "Shaq's Distilled List - {}".format(startTime.strftime("%b %d, %Y %I:%M %p"))
 
 # =============================================================================
