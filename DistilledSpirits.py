@@ -16,6 +16,7 @@
 # 20200229    Initial Version
 # 20200306    Initial release
 # 20200309    changed the fiter from "instock" to "all"
+# 20200311    removed fiter "Distilled Spirits" and "New / Back in stock"
 #
 # -----------------------------------------------------------------------------
 # Imports
