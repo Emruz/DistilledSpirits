@@ -20,7 +20,7 @@
 # -----------------------------------------------------------------------------
 # Imports
 from lxml import html, etree
-import os, requests, time
+import os, platform, requests, time
 from datetime import datetime, timedelta
 from dateutil import tz
 from sendgrid import SendGridAPIClient
@@ -30,8 +30,12 @@ from sendgrid.helpers.mail import Mail
 # -----------------------------------------------------------------------------
 # Variable Declarations
 startTime = datetime.now()
-logfile = "/Users/shahin/Projects/DistilledSpirits/DSList.log"
-touchfile = "/Users/shahin/Projects/DistilledSpirits/touch.file"
+if platform.system() == 'Windows':
+    logfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/DSList.log"
+    touchfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/touch.file"
+else:
+    logfile = "/Users/shahin/Projects/DistilledSpirits/DSList.log"
+    touchfile = "/Users/shahin/Projects/DistilledSpirits/touch.file"
 timeScale = "minutes"
 #Auto-detect zones:
 from_zone = tz.tzutc()
@@ -206,9 +210,10 @@ def GetDistilledList():
         'BourbonMaltScotchAll': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc",
         'BourbonMaltScotchInstock': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc",
         'BourbonMaltRyeScothAll': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc",
-        'BourbonMaltRyeScothInstock': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc"
+        'BourbonMaltRyeScothInstock': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc",
+        'BourbonMaltRyeScoth': "https://m.klwines.com/Products/?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48&limit=50&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText="
         }
-    url = urls['BourbonMaltRyeScothAll']
+    url = urls['BourbonMaltRyeScoth']
     output = []
     elementCount = 0
     productCount = 0
