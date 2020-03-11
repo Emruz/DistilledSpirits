@@ -21,7 +21,7 @@
 # Imports
 import os, platform, requests, time
 from lxml import html, etree
-from pprint import pprint
+#from pprint import pprint
 from datetime import datetime, timedelta
 from dateutil import tz
 from sendgrid import SendGridAPIClient
@@ -269,7 +269,7 @@ def GetDistilledList():
     #print(f"{productCount} new products in the last {timeSpan} {timeScale}")
     print(f'Last check at {lastRun}:')
     print(f'{productCount} out of {elementCount} products are new in the last {timeSpan.total_seconds()/60:.2f} minutes')
-    pprint(outprint)
+    #pprint(outprint)
 
     if products:
         htmlString = htmlHeader + str(products) + htmlFooter
