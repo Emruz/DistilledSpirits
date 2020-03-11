@@ -20,8 +20,9 @@
 #
 # -----------------------------------------------------------------------------
 # Imports
-from lxml import html, etree
 import os, platform, requests, time
+from lxml import html, etree
+from pprint import pprint
 from datetime import datetime, timedelta
 from dateutil import tz
 from sendgrid import SendGridAPIClient
@@ -216,6 +217,7 @@ def GetDistilledList():
         }
     url = urls['BourbonMaltRyeScoth']
     output = []
+    outprint = []
     elementCount = 0
     productCount = 0
     products = ""
@@ -226,8 +228,6 @@ def GetDistilledList():
     productList = tree.xpath('//*[@id="ProductList"]/ul//li')
     elementCount = len(productList)
     
-
-
     #print out the comparisions from this run
     print(f'thisRun    : {startTime.strftime("%m/%d/%Y %I:%M %p")}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}\n')
 
@@ -248,7 +248,7 @@ def GetDistilledList():
         strElementTimestamp = elementTimestamp.strftime("%m/%d/%Y %I:%M %p")
         
         #print out the comparisions to this run
-        print(f'eTime      : {eTime}\neTimestamp : {strElementTimestamp}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}\n')
+        outprint.append("eTime      : {}\neTimestamp : {}\nlastRun    : {}\n".format(eTime, strElementTimestamp, lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")))
 
         #if there is a new product, let's add it to the output list and increment the counter
         if elementTimestamp > lastRunTimestamp:
@@ -257,6 +257,7 @@ def GetDistilledList():
             #eTimeRoot[0].value = strElementTimestamp
             output.append(str(etree.tostring(e), 'utf-8'))
             print(f'{productCount} of {elementCount} added to output')
+            
 
     #if we found new products, let's build the product content for the email
     if productCount > 0:    
@@ -269,7 +270,8 @@ def GetDistilledList():
     #print(f"{productCount} new products in the last {timeSpan} {timeScale}")
     print(f'Last check at {lastRun}:')
     print(f'{productCount} out of {elementCount} products are new in the last {timeSpan.total_seconds()/60:.2f} minutes')
-        
+    pprint(outprint)
+
     if products:
         htmlString = htmlHeader + str(products) + htmlFooter
         print(f'found {productCount} products to send')
