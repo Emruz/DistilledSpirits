@@ -32,18 +32,33 @@ from sendgrid.helpers.mail import Mail
 # -----------------------------------------------------------------------------
 # Variable Declarations
 startTime = datetime.now()
+timeScale = "minutes"
+testSpan = 0
+
 if platform.system() == 'Windows':
+    outfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/DSList.out"
     logfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/DSList.log"
     touchfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/touch.file"
 else:
+    outfile = "/Users/shahin/Projects/DistilledSpirits/DSList.out"
     logfile = "/Users/shahin/Projects/DistilledSpirits/DSList.log"
-    touchfile = "/Users/shahin/Projects/DistilledSpirits/touch.file"
-timeScale = "minutes"
+    touchfile = "/Users/shahin/Projects/DistilledSpirits/touch.file"   
+
+# get contents from the outfile
+IF = open(outfile, 'r')
+OFContent = IF.read()
+IF.close()
+
+# open the outfile for writing if need be
+OF = open(outfile, 'w')
+def printing(text):
+    print(text)
+    OF.write(text + "\n")
+        
 #Auto-detect zones:
 from_zone = tz.tzutc()
 to_zone = tz.tzlocal()
 
-testSpan = 0
 # Convert lastRun and determine the time between runs.
 lastRun = time.ctime(os.path.getmtime(touchfile))
 lastRunTimestamp = datetime.strptime(lastRun, '%a %b %d %H:%M:%S %Y')
@@ -53,6 +68,7 @@ lastRunTimestamp  = lastRunTimestamp - timedelta(minutes = testSpan)
 timeSpan = startTime - lastRunTimestamp
 lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
 
+# email setup
 apiKey = os.environ.get('SENDGRID_API_KEY', None)
 sender = 'Shaq <shaq@emruz.com>'
 #receiver = ['shahinpirooz@gmail.com']
@@ -267,16 +283,21 @@ def GetDistilledList():
         
         print(products)
     
-    #print(f"{productCount} new products in the last {timeSpan} {timeScale}")
-    print(f'Last check at {lastRun}:')
-    print(f'{productCount} out of {elementCount} products are new in the last {timeSpan.total_seconds()/60:.2f} minutes')
-    #pprint(outprint)
 
     if products:
         htmlString = htmlHeader + str(products) + htmlFooter
-        print(f'found {productCount} products to send')
+        printing(f'thisRun    : {startTime.strftime("%m/%d/%Y %I:%M %p")}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}\n')
+        printing(f'Last check at {lastRun}:')
+        printing(f'{productCount} out of {elementCount} products are new in the last {timeSpan.total_seconds()/60:.2f} minutes')
+        printing(f'found {productCount} products to send')
         return htmlString
     else:
+        #print(f"{productCount} new products in the last {timeSpan} {timeScale}")
+        #print(OFContent)
+        OF.write(OFContent)
+        print(f'Last check at {lastRun}:')
+        print(f'{productCount} out of {elementCount} products are new in the last {timeSpan.total_seconds()/60:.2f} minutes')
+        #pprint(outprint)
         print(f'nothing to send!')
         return None
 
@@ -296,15 +317,17 @@ def main():
         try:
             sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
             response = sg.send(message)
-            print(response.status_code)
-            print(response.body)
-            print(response.headers)
+            printing(response.status_code)
+            printing(response.body)
+            printing(response.headers)
             os.utime(touchfile, None)
         except Exception as e:
-            print(e)
+            printing(f"Something went foobar!")
+            printing(f"Error: {e}")
     else:
         if apiKey is None:
-            print("Something went foobar with the API Key!")
+            printing("Something went foobar with the API Key!")
 
 if __name__ == '__main__':
     main() 
+    OF.close()
