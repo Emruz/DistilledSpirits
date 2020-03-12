@@ -20,7 +20,7 @@
 #
 # -----------------------------------------------------------------------------
 # Imports
-import os, platform, requests, time
+import os, platform, requests, time, http
 from lxml import html, etree
 #from pprint import pprint
 from datetime import datetime, timedelta
@@ -315,15 +315,20 @@ def main():
 
     if apiKey is not None and htmlString is not None:
         try:
-            sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+            sg = SendGridAPIClient(api_key=apiKey)
             response = sg.send(message)
             printing(response.status_code)
             printing(response.body)
             printing(response.headers)
-            os.utime(touchfile, None)
+        except (http.client.IncompleteRead) as e:
+            page = e.partial
+            printing(f"Partial page:\n{page}")
         except Exception as e:
             printing(f"Something went foobar!")
             printing(f"Error: {e}")
+        finally:
+            os.utime(touchfile, None)
+
     else:
         if apiKey is None:
             printing("Something went foobar with the API Key!")

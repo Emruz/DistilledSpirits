@@ -104,3 +104,4 @@ venv.bak/
 .mypy_cache/
 sendgrid.env
 .DS_Store
+DSList.out
