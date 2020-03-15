@@ -17,10 +17,11 @@
 # 20200306    Initial release
 # 20200309    changed the fiter from "instock" to "all"
 # 20200311    removed fiter "Distilled Spirits" and "New / Back in stock"
+# 20200314    moved from timestamp validation of new items to a list compare from file
 #
 # -----------------------------------------------------------------------------
 # Imports
-import os, platform, requests, time, http
+import os, platform, requests, time, http, pickle
 from lxml import html, etree
 #from pprint import pprint
 from datetime import datetime, timedelta
@@ -33,16 +34,25 @@ from sendgrid.helpers.mail import Mail
 # Variable Declarations
 startTime = datetime.now()
 timeScale = "minutes"
-testSpan = 0
+testSpan = 240
 
 if platform.system() == 'Windows':
     outfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/DSList.out"
     logfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/DSList.log"
     touchfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/touch.file"
+    productsfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/products.out"
 else:
     outfile = "/Users/shahin/Projects/DistilledSpirits/DSList.out"
     logfile = "/Users/shahin/Projects/DistilledSpirits/DSList.log"
     touchfile = "/Users/shahin/Projects/DistilledSpirits/touch.file"   
+    productsfile = "/Users/shahin/Projects/DistilledSpirits/products.out"
+# Touch command for the touchfile
+# os.utime(touchfile, None)
+    
+# open the touchfile and get the list of products from the last run
+output = []
+with open(productsfile, 'rb') as fhLastProducts:
+    lastProducts = pickle.load(fhLastProducts)
 
 # get contents from the outfile
 IF = open(outfile, 'r')
@@ -53,7 +63,7 @@ IF.close()
 OF = open(outfile, 'w')
 def printing(text):
     print(text)
-    OF.write(text + "\n")
+    OF.write("{text}\n")
         
 #Auto-detect zones:
 from_zone = tz.tzutc()
@@ -71,7 +81,7 @@ lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
 # email setup
 apiKey = os.environ.get('SENDGRID_API_KEY', None)
 sender = 'Shaq <shaq@emruz.com>'
-#receiver = ['shahinpirooz@gmail.com']
+receiver = ['shahinpirooz@gmail.com']
 #receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com']
 receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com']
 subject = "Shaq's Distilled List - {}".format(startTime.strftime("%b %d, %Y %I:%M %p"))
@@ -232,8 +242,8 @@ def GetDistilledList():
         'BourbonMaltRyeScoth': "https://m.klwines.com/Products/?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48&limit=50&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText="
         }
     url = urls['BourbonMaltRyeScoth']
-    output = []
     outprint = []
+    eCount = 0
     elementCount = 0
     productCount = 0
     products = ""
@@ -266,14 +276,17 @@ def GetDistilledList():
         #print out the comparisions to this run
         outprint.append("eTime      : {}\neTimestamp : {}\nlastRun    : {}\n".format(eTime, strElementTimestamp, lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")))
 
-        #if there is a new product, let's add it to the output list and increment the counter
-        if elementTimestamp > lastRunTimestamp:
+        # see if the first element in the list is the same as the last time
+        eTimeRoot[0].text = strElementTimestamp
+        output.append(str(etree.tostring(e), 'utf-8'))
+        if output[eCount] == lastProducts[0]:
+            del output[eCount]
+            break
+        else:
+            #if there is a new product, let's add it to the output list and increment the counter
             productCount +=1
-            eTimeRoot[0].text = strElementTimestamp
-            #eTimeRoot[0].value = strElementTimestamp
-            output.append(str(etree.tostring(e), 'utf-8'))
+            eCount +=1
             print(f'{productCount} of {elementCount} added to output')
-            
 
     #if we found new products, let's build the product content for the email
     if productCount > 0:    
@@ -282,7 +295,6 @@ def GetDistilledList():
         products += "</ul>"
         
         print(products)
-    
 
     if products:
         htmlString = htmlHeader + str(products) + htmlFooter
@@ -317,17 +329,24 @@ def main():
         try:
             sg = SendGridAPIClient(api_key=apiKey)
             response = sg.send(message)
-            printing(response.status_code)
-            printing(response.body)
-            printing(response.headers)
+            if response.status_code == 202:
+                os.utime(touchfile, None)
+                with open(productsfile, 'wb') as fhThisProducts:
+                    # store the data as binary data stream
+                    pickle.dump(output, fhThisProducts)
+
+            printing(f"Status Code : {response.status_code}")
+            printing(f"Body        : {response.body}")
+            printing(f"Headers     : {response.headers}")
         except (http.client.IncompleteRead) as e:
             page = e.partial
             printing(f"Partial page:\n{page}")
+            printing(f"Error: {e}\nTraceback: {e.with_traceback(e.__traceback__)}")
         except Exception as e:
             printing(f"Something went foobar!")
-            printing(f"Error: {e}")
-        finally:
-            os.utime(touchfile, None)
+            printing(f"Error: {e}\nTraceback: {e.with_traceback(e.__traceback__)}")
+        #finally:
+            
 
     else:
         if apiKey is None:
