@@ -247,7 +247,7 @@ def GetDistilledList():
     elementCount = 0
     productCount = 0
     products = ""
-    
+    pFound = False
     # -------------------------------------------------------------------------
     page = requests.get(url)
     tree = html.fromstring(page.content)
@@ -280,6 +280,13 @@ def GetDistilledList():
         eTimeRoot[0].text = strElementTimestamp
         output.append(str(etree.tostring(e), 'utf-8'))
         if output[eCount] == lastProducts[eCount]:
+        for p in lastProducts:
+            if output[eCount] == p:
+                print(f"Match {eCount}")
+                pFound = True
+                break
+        if pFound:
+            pFound = False
             del output[eCount]
             break
         else:
