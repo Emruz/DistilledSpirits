@@ -51,7 +51,6 @@ else:
     
 # open the touchfile and get the list of products from the last run
 output = []
-outProducts = []
 with open(productsfile, 'rb') as fhLastProducts:
     lastProducts = pickle.load(fhLastProducts)
 
@@ -248,7 +247,7 @@ def GetDistilledList():
     elementCount = 0
     productCount = 0
     products = ""
-    thisProducts = []
+    pFound = False
     # -------------------------------------------------------------------------
     page = requests.get(url)
     tree = html.fromstring(page.content)
@@ -279,18 +278,21 @@ def GetDistilledList():
 
         # see if the first element in the list is the same as the last time
         eTimeRoot[0].text = strElementTimestamp
-        eProduct = str(etree.tostring(e), 'utf-8')
-        thisProducts.append(eProduct)                
+        output.append(str(etree.tostring(e), 'utf-8'))
         for p in lastProducts:
-            if eProduct == p:
-                print(f"Seen: {eProduct}")
+            if output[eCount] == p:
+                print(f"Match {eCount}")
+                pFound = True
                 break
-            else:
-                output.append(eProduct)                
-                productCount +=1
-                eCount +=1
-                print(f'{productCount} of {elementCount} added to output')
-    outProducts = output + lastProducts
+        if pFound:
+            pFound = False
+            del output[eCount]
+            break
+        else:
+            #if there is a new product, let's add it to the output list and increment the counter
+            productCount +=1
+            eCount +=1
+            print(f'{productCount} of {elementCount} added to output')
 
     #if we found new products, let's build the product content for the email
     if productCount > 0:    
@@ -337,7 +339,7 @@ def main():
                 os.utime(touchfile, None)
                 with open(productsfile, 'wb') as fhThisProducts:
                     # store the data as binary data stream
-                    pickle.dump(outProducts, fhThisProducts)
+                    pickle.dump(output, fhThisProducts)
 
             printing(f"Status Code : {response.status_code}")
             printing(f"Body        : {response.body}")
