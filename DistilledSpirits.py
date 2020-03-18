@@ -279,11 +279,12 @@ def GetDistilledList():
         # see if the first element in the list is the same as the last time
         eTimeRoot[0].text = strElementTimestamp
         output.append(str(etree.tostring(e), 'utf-8'))
-        if output[eCount] == lastProducts[0]:
+        if output[eCount] == lastProducts[eCount]:
             del output[eCount]
             break
         else:
             #if there is a new product, let's add it to the output list and increment the counter
+            lastProducts.insertBefore[0,output[eCount]]
             productCount +=1
             eCount +=1
             print(f'{productCount} of {elementCount} added to output')
