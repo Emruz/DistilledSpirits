@@ -82,8 +82,8 @@ lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
 apiKey = os.environ.get('SENDGRID_API_KEY', None)
 sender = 'Shaq <shaq@emruz.com>'
 receiver = ['shahinpirooz@gmail.com']
-#receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com','eanagel@gmail.com']
-receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com','eanagel@gmail.com']
+#receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com']
+receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com']
 subject = "Shaq's Distilled List - {}".format(startTime.strftime("%b %d, %Y %I:%M %p"))
 
 # =============================================================================
@@ -247,7 +247,7 @@ def GetDistilledList():
     elementCount = 0
     productCount = 0
     products = ""
-    pFound = False
+    
     # -------------------------------------------------------------------------
     page = requests.get(url)
     tree = html.fromstring(page.content)
@@ -279,13 +279,7 @@ def GetDistilledList():
         # see if the first element in the list is the same as the last time
         eTimeRoot[0].text = strElementTimestamp
         output.append(str(etree.tostring(e), 'utf-8'))
-        for p in lastProducts:
-            if output[eCount] == p:
-                print(f"Match {eCount}")
-                pFound = True
-                break
-        if pFound:
-            pFound = False
+        if output[eCount] == lastProducts[0]:
             del output[eCount]
             break
         else:
