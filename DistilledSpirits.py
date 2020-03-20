@@ -21,7 +21,7 @@
 #
 # -----------------------------------------------------------------------------
 # Imports
-import os, platform, requests, time, http, pickle
+import os, platform, requests, time, http, json, re
 from lxml import html, etree
 #from pprint import pprint
 from datetime import datetime, timedelta
@@ -34,7 +34,7 @@ from sendgrid.helpers.mail import Mail
 # Variable Declarations
 startTime = datetime.now()
 timeScale = "minutes"
-testSpan = 240
+testSpan = 0
 
 if platform.system() == 'Windows':
     outfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/DSList.out"
@@ -50,9 +50,11 @@ else:
 # os.utime(touchfile, None)
     
 # open the touchfile and get the list of products from the last run
-output = []
-with open(productsfile, 'rb') as fhLastProducts:
-    lastProducts = pickle.load(fhLastProducts)
+output = {}
+thisProducts = {}
+lastProducts = {}
+with open(productsfile, 'r') as fhLastProducts:
+    lastProducts = json.loads(fhLastProducts.read())
 
 # get contents from the outfile
 IF = open(outfile, 'r')
@@ -72,7 +74,7 @@ to_zone = tz.tzlocal()
 # Convert lastRun and determine the time between runs.
 lastRun = time.ctime(os.path.getmtime(touchfile))
 lastRunTimestamp = datetime.strptime(lastRun, '%a %b %d %H:%M:%S %Y')
-lastRunTimestamp  = lastRunTimestamp - timedelta(minutes = testSpan)
+lastRunTimestamp = lastRunTimestamp - timedelta(minutes = testSpan)
 
 # determine time since last run and convert time zone
 timeSpan = startTime - lastRunTimestamp
@@ -82,8 +84,8 @@ lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
 apiKey = os.environ.get('SENDGRID_API_KEY', None)
 sender = 'Shaq <shaq@emruz.com>'
 receiver = ['shahinpirooz@gmail.com']
-#receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com']
-receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com']
+#receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com','eanagel@gmail.com']
+receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com','eanagel@gmail.com']
 subject = "Shaq's Distilled List - {}".format(startTime.strftime("%b %d, %Y %I:%M %p"))
 
 # =============================================================================
@@ -242,12 +244,10 @@ def GetDistilledList():
         'BourbonMaltRyeScoth': "https://m.klwines.com/Products/?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48&limit=50&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText="
         }
     url = urls['BourbonMaltRyeScoth']
-    outprint = []
-    eCount = 0
     elementCount = 0
     productCount = 0
     products = ""
-    pFound = False
+
     # -------------------------------------------------------------------------
     page = requests.get(url)
     tree = html.fromstring(page.content)
@@ -255,15 +255,21 @@ def GetDistilledList():
     elementCount = len(productList)
     
     #print out the comparisions from this run
-    print(f'thisRun    : {startTime.strftime("%m/%d/%Y %I:%M %p")}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}\n')
+    #print(f'thisRun    : {startTime.strftime("%m/%d/%Y %I:%M %p")}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}\n')
 
     #              /html/body/div[1]/div[2]/div[2]/ul/li[2]/div/div/a/p[2]    
     #    timestamp //*[@id="ProductList"]/ul/li[1]/div/div/a/p[2]
     for e in productList:
+        #assume each products is new
+        existingProduct = False
+        
+        eSkuRoot = e.xpath('div/div/a/p[3]')
+        eSku = str(etree.tostring(eSkuRoot[0]), 'utf-8')
+        eSku = re.split("</p>", re.split("</strong>", eSku)[1])[0]
+        print(f'SKU: {eSku}')
+
         eTimeRoot = e.xpath('div/div/a/p[2]')
-        eTime = eTimeRoot[0].text
-        # utc = datetime.utcnow()
-        eTimeutc = datetime.strptime(eTime, '%m/%d/%Y %I:%M %p')
+        eTimeutc = datetime.strptime(eTimeRoot[0].text, '%m/%d/%Y %I:%M %p')
 
         # Tell the datetime object that it's in UTC time zone since 
         # datetime objects are 'naive' by default
@@ -273,33 +279,36 @@ def GetDistilledList():
         elementTimestamp = eTimeutc.astimezone(to_zone)
         strElementTimestamp = elementTimestamp.strftime("%m/%d/%Y %I:%M %p")
         
-        #print out the comparisions to this run
-        outprint.append("eTime      : {}\neTimestamp : {}\nlastRun    : {}\n".format(eTime, strElementTimestamp, lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")))
-
         # see if the first element in the list is the same as the last time
         eTimeRoot[0].text = strElementTimestamp
-        output.append(str(etree.tostring(e), 'utf-8'))
-        if output[eCount] == lastProducts[eCount]:
-        for p in lastProducts:
-            if output[eCount] == p:
-                print(f"Match {eCount}")
-                pFound = True
-                break
-        if pFound:
-            pFound = False
-            del output[eCount]
-            break
+        eProduct = str(etree.tostring(e), 'utf-8')
+        if len(lastProducts) > 0:
+            for sku in lastProducts.keys():
+                if eSku == sku:
+                    print(f"Seen before, skipping...")
+                    existingProduct = True
+                    break
+        """
         else:
-            #if there is a new product, let's add it to the output list and increment the counter
-            lastProducts.insertBefore[0,output[eCount]]
+            if elementTimestamp > lastRunTimestamp:
+                thisProducts[eSku] = eProduct
+                productCount += 1
+                print(f'no lastProducts, using timestamp instead.')
+                print(f'{productCount} of {elementCount} added to thisProducts')
+        """
+        #if there is a new product, let's add it to the thisProducts list and increment the counter
+        if not existingProduct:
+            thisProducts[eSku] = eProduct
             productCount +=1
-            eCount +=1
-            print(f'{productCount} of {elementCount} added to output')
-
+            print(f'{productCount} of {elementCount} added to thisProducts')
+            
+    output.update(thisProducts)
+    output.update(lastProducts)
+        
     #if we found new products, let's build the product content for the email
     if productCount > 0:    
         products = "<ul>"
-        products += ''.join(output)
+        products += ''.join(thisProducts.values())
         products += "</ul>"
         
         print(products)
@@ -317,7 +326,6 @@ def GetDistilledList():
         OF.write(OFContent)
         print(f'Last check at {lastRun}:')
         print(f'{productCount} out of {elementCount} products are new in the last {timeSpan.total_seconds()/60:.2f} minutes')
-        #pprint(outprint)
         print(f'nothing to send!')
         return None
 
@@ -339,9 +347,9 @@ def main():
             response = sg.send(message)
             if response.status_code == 202:
                 os.utime(touchfile, None)
-                with open(productsfile, 'wb') as fhThisProducts:
+                with open(productsfile, 'w') as fhThisProducts:
                     # store the data as binary data stream
-                    pickle.dump(output, fhThisProducts)
+                    fhThisProducts.write(json.dumps(output))
 
             printing(f"Status Code : {response.status_code}")
             printing(f"Body        : {response.body}")
