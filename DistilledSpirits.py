@@ -18,6 +18,9 @@
 # 20200309    changed the fiter from "instock" to "all"
 # 20200311    removed fiter "Distilled Spirits" and "New / Back in stock"
 # 20200314    moved from timestamp validation of new items to a list compare from file
+# 20200320    moved to comparing SKUs
+# 20200322    if SKU matches, need to validate if qty on hand changed before we decide if seen before
+# 20200323    add name, price and fixed updates for qty changes and send on qtyThreshold, not just new
 #
 # -----------------------------------------------------------------------------
 # Imports
@@ -35,6 +38,7 @@ from sendgrid.helpers.mail import Mail
 startTime = datetime.now()
 timeScale = "minutes"
 testSpan = 0
+qtyThreshold = 5
 
 if platform.system() == 'Windows':
     outfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/DSList.out"
@@ -52,6 +56,7 @@ else:
 # open the touchfile and get the list of products from the last run
 output = {}
 thisProducts = {}
+updateProducts = {}
 lastProducts = {}
 with open(productsfile, 'r') as fhLastProducts:
     lastProducts = json.loads(fhLastProducts.read())
@@ -261,57 +266,85 @@ def GetDistilledList():
     #    timestamp //*[@id="ProductList"]/ul/li[1]/div/div/a/p[2]
     for e in productList:
         #assume each products is new
-        existingProduct = False
+        newProduct = True
+        thresholdMet = False
         
+        # Product Name
+        # //*[@id="ProductList"]/ul/li[2]/div/div/a/h3
+        # //*[@id="ProductList"]/ul/li[1]/div/div/a/h3/text()
+        # //*[@id="ProductList"]/ul/li[2]/div/div/a/h3
+        eName = e.xpath('div/div/a/h3/text()')[0].strip()
+        print(f'Name: {eName}')
+        
+        # //*[@id="ProductList"]/ul/li[2]/div/div/a/p[1]/span
+        ePrice = e.xpath('div/div/a/p[1]/span/text()')[0].strip()
+        if '$' in ePrice: 
+            ePrice = re.split("\\$", ePrice)[1]
+        else:
+            ePrice = re.split("Price: ", ePrice)[1]
+        print(f'Price: ${ePrice}')
+
+        # Product Time
+        eTimeRoot = e.xpath('div/div/a/p[2]')
+        eTimeutc = datetime.strptime(eTimeRoot[0].text, '%m/%d/%Y %I:%M %p')
+        eTimeutc = eTimeutc.replace(tzinfo=from_zone) # Tell the datetime object that it's in UTC time zone since datetime objects are 'naive' by default
+        elementTimestamp = eTimeutc.astimezone(to_zone) # Convert time zone
+        strElementTimestamp = elementTimestamp.strftime("%m/%d/%Y %I:%M %p")
+        eTimeRoot[0].text = strElementTimestamp # see if the first element in the list is the same as the last time
+
+        # Product SKU
         eSkuRoot = e.xpath('div/div/a/p[3]')
         eSku = str(etree.tostring(eSkuRoot[0]), 'utf-8')
         eSku = re.split("</p>", re.split("</strong>", eSku)[1])[0]
         print(f'SKU: {eSku}')
 
-        eTimeRoot = e.xpath('div/div/a/p[2]')
-        eTimeutc = datetime.strptime(eTimeRoot[0].text, '%m/%d/%Y %I:%M %p')
+        # Product Quantity On Hand
+        eQtyRoot = e.xpath('div/div/a/p[4]/span')
+        eQty = str(etree.tostring(eQtyRoot[0]), 'utf-8')
+        eQty = re.split('&#13;\n', eQty)[1].strip()
+        if '&' in eQty: eQty = re.split(';', eQty)[1].strip()
+        if 'sold' in eQty.lower(): eQty = '0'
+        print(f'QoH: {eQty}')
 
-        # Tell the datetime object that it's in UTC time zone since 
-        # datetime objects are 'naive' by default
-        eTimeutc = eTimeutc.replace(tzinfo=from_zone)
-        
-        # Convert time zone
-        elementTimestamp = eTimeutc.astimezone(to_zone)
-        strElementTimestamp = elementTimestamp.strftime("%m/%d/%Y %I:%M %p")
-        
-        # see if the first element in the list is the same as the last time
-        eTimeRoot[0].text = strElementTimestamp
+        # Raw product html with updated timestamp
         eProduct = str(etree.tostring(e), 'utf-8')
-        if len(lastProducts) > 0:
-            for sku in lastProducts.keys():
-                if eSku == sku:
-                    print(f"Seen before, skipping...")
-                    existingProduct = True
-                    break
-        """
-        else:
-            if elementTimestamp > lastRunTimestamp:
-                thisProducts[eSku] = eProduct
-                productCount += 1
-                print(f'no lastProducts, using timestamp instead.')
-                print(f'{productCount} of {elementCount} added to thisProducts')
-        """
-        #if there is a new product, let's add it to the thisProducts list and increment the counter
-        if not existingProduct:
-            thisProducts[eSku] = eProduct
+
+        # Products that we will use to update the file db
+        updateProducts[eSku] = {'name': eName, 'price': ePrice, 'qty': eQty, 'time': strElementTimestamp, 'product' : eProduct}
+        
+        # Check to see if we have anything to send
+        for lastSku in lastProducts.keys():
+            if eSku == lastSku:
+                print(f"Seen before, checking quantity...")
+                lastQty = lastProducts[lastSku].get('qty','0')
+                if int(eQty) > 0 and int(eQty) <= qtyThreshold and int(lastQty) > qtyThreshold:
+                    thresholdMet = True
+                newProduct = False
+                break
+
+        #if there is a new product, or we hit the threshold let's add it to thisProducts and increment the counter
+        if newProduct or thresholdMet:
+            thisProducts[eSku] = {'name': eName, 'price': ePrice, 'qty': eQty, 'time': strElementTimestamp, 'product': eProduct}
             productCount +=1
             print(f'{productCount} of {elementCount} added to thisProducts')
             
-    output.update(thisProducts)
+    # Update output first with lastProducts, then with thisProducts
     output.update(lastProducts)
+    output.update(thisProducts)
         
     #if we found new products, let's build the product content for the email
-    if productCount > 0:    
+    if productCount > 0: 
+        outProducts = []
+        for i,s in enumerate(thisProducts):
+            outProducts.append(thisProducts[s]['product'])
         products = "<ul>"
-        products += ''.join(thisProducts.values())
+        products += ''.join(outProducts)
         products += "</ul>"
         
         print(products)
+    else: # if we don't have anything send, lets just update the file db
+        with open(productsfile, 'w') as fhThisProducts:
+            fhThisProducts.write(json.dumps(updateProducts))
 
     if products:
         htmlString = htmlHeader + str(products) + htmlFooter
