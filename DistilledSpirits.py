@@ -47,16 +47,16 @@ if platform.system() == 'Windows':
     logfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/DSList.log"
     touchfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/touch.file"
     productsfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/products.out"
-    headerfile1 = "/Users/Shahin Pirooz/Projects/DistilledSpirits/htmlHead_1.html"
-    headerfile2 = "/Users/Shahin Pirooz/Projects/DistilledSpirits/htmlHead_2.html"
+    headerfile1 = "/Users/Shahin Pirooz/Projects/DistilledSpirits/htmlHeaderTop.html"
+    headerfile2 = "/Users/Shahin Pirooz/Projects/DistilledSpirits/htmlHeaderBottom.html"
     footerfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/htmlFooter.html"
 else:
     outfile = "/Users/shahin/Projects/DistilledSpirits/DSList.out"
     logfile = "/Users/shahin/Projects/DistilledSpirits/DSList.log"
     touchfile = "/Users/shahin/Projects/DistilledSpirits/touch.file"   
     productsfile = "/Users/shahin/Projects/DistilledSpirits/products.out"
-    headerfile1 = "/Users/shahin/Projects/DistilledSpirits/htmlHead_1.html"
-    headerfile2 = "/Users/shahin/Projects/DistilledSpirits/htmlHead_2.html"
+    headerfile1 = "/Users/shahin/Projects/DistilledSpirits/htmlHeaderTop.html"
+    headerfile2 = "/Users/shahin/Projects/DistilledSpirits/htmlHeaderBottom.html"
     footerfile = "/Users/shahin/Projects/DistilledSpirits/htmlFooter.html"
 # Touch command for the touchfile
 # os.utime(touchfile, None)
@@ -194,7 +194,8 @@ def GetDistilledList():
             if eSku == lastSku:
                 print(f"Seen before, checking quantity...")
                 lastQty = lastProducts[lastSku].get('qty','0')
-                if int(eQty) > 0 and int(eQty) <= qtyThreshold and int(lastQty) > qtyThreshold:
+                #if int(eQty) > 0 and int(eQty) <= qtyThreshold and int(lastQty) > qtyThreshold:
+                if int(eQty) > 0 and int(lastQty) <= 0:
                     thresholdMet = True
                 newProduct = False
                 break
@@ -214,9 +215,7 @@ def GetDistilledList():
         outProducts = []
         for i,s in enumerate(thisProducts):
             outProducts.append(thisProducts[s]['product'])
-        products = "<ul>"
-        products += ''.join(outProducts)
-        products += "</ul>"
+        products = ''.join(outProducts)
         
         print(products)
     else: # if we don't have anything send, lets just update the file db
