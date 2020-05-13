@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/opt/anaconda3/bin/python
 # -*- coding: utf-8 -*-
 # =============================================================================
 """
@@ -23,6 +23,7 @@
 # 20200323    add name, price and fixed updates for qty changes and send on qtyThreshold, not just new
 # 20200331    moved the html header and footer to a files. 
 #             still need to put the refine search into a variable and feed it into the file... 
+# 20200513    modified the eQty filters to support new qoh (Sp O) value from the site
 #
 # -----------------------------------------------------------------------------
 # Imports
@@ -143,6 +144,7 @@ def GetDistilledList():
     #    timestamp //*[@id="ProductList"]/ul/li[1]/div/div/a/p[2]
     for e in productList:
         #assume each products is new
+        # e is the current element eX is the attribute of the current element
         newProduct = True
         thresholdMet = False
         
@@ -177,11 +179,17 @@ def GetDistilledList():
 
         # Product Quantity On Hand
         eQtyRoot = e.xpath('div/div/a/p[4]/span')
-        eQty = str(etree.tostring(eQtyRoot[0]), 'utf-8')
-        eQty = re.split('&#13;\n', eQty)[1].strip()
-        if '&' in eQty: eQty = re.split(';', eQty)[1].strip()
+        eQty = str(etree.tostring(eQtyRoot[0]), 'utf-8')            
+        #eQty = re.split('&#13;\n', eQty)[1].strip()
+        if '\n' in eQty: eQty = re.split('\n', eQty)[1].strip()
+        if '&gt; ' in eQty: eQty = re.split('&gt; ', eQty)[1].strip()
+        if '&#13;' in eQty: eQty = re.split('&#13;', eQty)[0].strip()
         if 'sold' in eQty.lower(): eQty = '0'
+        if 'sp' in eQty.lower(): eQty = 'SP'
         print(f'QoH: {eQty}')
+        
+        #if there's nothing on hand, skip it
+        if eQty == '0': continue
 
         # Raw product html with updated timestamp
         eProduct = str(etree.tostring(e), 'utf-8')
