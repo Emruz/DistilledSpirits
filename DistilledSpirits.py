@@ -185,7 +185,7 @@ def GetDistilledList():
         if '&gt; ' in eQty: eQty = re.split('&gt; ', eQty)[1].strip()
         if '&#13;' in eQty: eQty = re.split('&#13;', eQty)[0].strip()
         if 'sold' in eQty.lower(): eQty = '0'
-        if 'sp' in eQty.lower(): eQty = 'SP'
+        if 'sp' in eQty.lower(): eQty = '666'
         print(f'QoH: {eQty}')
         
         #if there's nothing on hand, skip it
