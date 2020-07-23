@@ -105,3 +105,4 @@ venv.bak/
 sendgrid.env
 .DS_Store
 DSList.out
+*.out
