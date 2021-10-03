@@ -6,7 +6,7 @@
 @credits: Shahin Pirooz
 @company: Emruz
 @created: Sun Dec  1 17:30:49 2019
-@python: 3.7
+@python: 4.0
 """
 # =============================================================================
 """ This module... """
@@ -24,6 +24,7 @@
 # 20200331    moved the html header and footer to a files. 
 #             still need to put the refine search into a variable and feed it into the file... 
 # 20200513    modified the eQty filters to support new qoh (Sp O) value from the site
+# 20211002    Site updated, so had to make changes to support the updates. 
 #
 # -----------------------------------------------------------------------------
 # Imports
@@ -115,11 +116,11 @@ def GetDistilledList():
     #https://www.klwines.com/Products?&filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!27&limit=50&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText=
     #https://www.klwines.com/Products/?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48&limit=50&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText=
     urls = {
-        'BourbonMaltScotchAll': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc",
-        'BourbonMaltScotchInstock': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc",
-        'BourbonMaltRyeScothAll': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc",
-        'BourbonMaltRyeScothInstock': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc",
-        'BourbonMaltRyeScoth': "https://m.klwines.com/Products/?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48&limit=50&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText="
+        'BourbonMaltScotchAll': "https://www.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc",
+        'BourbonMaltScotchInstock': "https://www.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc",
+        'BourbonMaltRyeScothAll': "https://www.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc",
+        'BourbonMaltRyeScothInstock': "https://www.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48!90$eq$1$True$ff-90-1--$&orderBy=60%20asc,NewProductFeedDate%20desc",
+        'BourbonMaltRyeScoth': "https://www.klwines.com/Products/?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48&limit=50&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText="
         }
     url = urls['BourbonMaltRyeScoth']
 
@@ -162,44 +163,44 @@ def GetDistilledList():
         thresholdMet = False
 
         # Product Date
-        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[0]
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[1]
         eTimeRoot = e[0]
         eTimeutc = datetime.strptime(eTimeRoot.text, '%m/%d/%Y %I:%M %p')
         eTimeutc = eTimeutc.replace(tzinfo=from_zone) # Tell the datetime object that it's in UTC time zone since datetime objects are 'naive' by default
         elementTimestamp = eTimeutc.astimezone(to_zone) # Convert time zone
         strElementTimestamp = elementTimestamp.strftime("%m/%d/%Y %I:%M %p")
-        eTimeRoot = strElementTimestamp # see if the first element in the list is the same as the last time
-        print(f'Date: {eTimeRoot}')
+        eTime = strElementTimestamp 
+        print(f'Date: {eTime}')
 
         # Product SKU
-        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[1]
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[2]
         eSkuRoot = e[1]
         eSku = eSkuRoot.text.strip()
         print(f'SKU: {eSku}')
 
         # Product Vintage
-        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[2]
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[3]
         eVintageRoot = e[2]
         eVintage = eVintageRoot.text.strip()
         print(f'Vintage: {eVintage}')
 
         # Product Item Name
-        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[3]
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[4]
         eNameRoot = e[3]
         eNameHref = eNameRoot[0].get('href')
         eName = eNameRoot[0].text
         print(f'Name: {eName}')
         
         # Product List Price
-        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[4]
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[5]
         ePriceRoot = e[4]
         ePrice = ePriceRoot.text.strip()
         print(f'Price: {ePrice}')
 
         # Product Quantity On Hand
-        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[5]
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[6]
         eQtyRoot = e[5]
-        eQty = eQtyRoot.text           
+        eQty = eQtyRoot.text     
         if '\n' in eQty: eQty = re.split('\n', eQty)[1].strip()
         if '>' in eQty: eQty = re.split('> ', eQty)[1].strip()
         if '&#13;' in eQty: eQty = re.split('&#13;', eQty)[0].strip()
@@ -207,15 +208,29 @@ def GetDistilledList():
         if 'sp' in eQty.lower(): eQty = '666'
         print(f'QoH: {eQty}')
         
+        # Product Allocation
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[7]/span
+        
         print('')
 
-        # Product Allocation
-        
         #if there's nothing on hand, skip it
         if eQty == '0': continue
 
         # Raw product html with updated timestamp
-        eProduct = str(etree.tostring(e), 'utf-8')
+        li='''            <li class="no-highlight ui-btn ui-btn-up-b ui-btn-icon-right ui-li-has-arrow ui-li ui-first-child ui-btn-up-undefined">
+                <div class="ui-btn-inner ui-li">
+                    <div class="ui-btn-text">
+                        <a class="no-highlight product-link ui-link-inherit" href="/p/i?i='''+eSku+'''" rel="external">
+                            <h3 class="ui-li-heading ">'''+eName+'''</h3>
+                            <p class="ui-li-desc "><span class="price">'''+ePrice+'''</span></p>
+                            <p class="ui-li-desc ">'''+eTime+'''</p>
+                            <p class="ui-li-desc"><strong>SKU: </strong>'''+eSku+'''</p>
+                            <p class="ui-li-desc"><strong>Quantity On Hand: </strong><span class="">'''+eQty+'''</span></p>
+                        </a>
+                    </div><span class="ui-icon ui-icon-arrow-r ui-icon-shadow">&nbsp;</span>
+                </div>
+            </li>'''
+        eProduct = li
         #print(f'Product: {eProduct}')
 
         # Products that we will use to update the file db
