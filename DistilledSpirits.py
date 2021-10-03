@@ -112,7 +112,8 @@ def GetDistilledList():
     with open(headerfile2, 'r') as fhHtmlHeader:
         htmlHeaderBottom = fhHtmlHeader.read()
     
-    
+    #https://www.klwines.com/Products?&filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!27&limit=50&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText=
+    #https://www.klwines.com/Products/?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!28$eq$(3)$True$ff-28-(3)--$or,27.or,45.or,48&limit=50&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc&searchText=
     urls = {
         'BourbonMaltScotchAll': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-all!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc",
         'BourbonMaltScotchInstock': "https://m.klwines.com/Products?filters=sv2_NewProductFeedYN$eq$1$True$ProductFeed$!dflt-stock-instock!30$eq$(216)$True$ff-30-(216)--$!28$eq$(3)$True$ff-28-(3)--$or,27.or,48!90$eq$1$True$ff-90-1--$&limit=100&offset=0&orderBy=60%20asc,NewProductFeedDate%20desc",
@@ -127,72 +128,95 @@ def GetDistilledList():
     with open(footerfile, 'r') as fhHtmlFooter:
         htmlFooter = fhHtmlFooter.read()
 
-    elementCount = 0
+    eCount = 0
     productCount = 0
     products = ""
 
     # -------------------------------------------------------------------------
-    page = requests.get(url)
+    #requestHeaders = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+    requestHeaders = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/600.7.12 (KHTML, like Gecko) Version/8.0.7 Safari/600.7.12'}
+    page = requests.get(url, headers=requestHeaders)
     tree = html.fromstring(page.content)
-    productList = tree.xpath('//*[@id="ProductList"]/ul//li')
-    elementCount = len(productList)
+    productList = tree.xpath('//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody')[0]
+    
+    #page-content > div.clearfix > div.col-b > div.new-product-feed.content > div > table > tbody
+    #document.querySelector("#page-content > div.clearfix > div.col-b > div.new-product-feed.content > div > table > tbody")
+    #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody
+    #/html/body/div[2]/div/div[2]/div/div/div[2]/div[2]/div[3]/div/table/tbody
+    
+    
+    eCount = len(productList)
     
     #print out the comparisions from this run
     #print(f'thisRun    : {startTime.strftime("%m/%d/%Y %I:%M %p")}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}\n')
 
     #              /html/body/div[1]/div[2]/div[2]/ul/li[2]/div/div/a/p[2]    
     #    timestamp //*[@id="ProductList"]/ul/li[1]/div/div/a/p[2]
+    
+    
     for e in productList:
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr
         #assume each products is new
         # e is the current element eX is the attribute of the current element
         newProduct = True
         thresholdMet = False
-        
-        # Product Name
-        # //*[@id="ProductList"]/ul/li[2]/div/div/a/h3
-        # //*[@id="ProductList"]/ul/li[1]/div/div/a/h3/text()
-        # //*[@id="ProductList"]/ul/li[2]/div/div/a/h3
-        eName = e.xpath('div/div/a/h3/text()')[0].strip()
-        print(f'Name: {eName}')
-        
-        # //*[@id="ProductList"]/ul/li[2]/div/div/a/p[1]/span
-        ePrice = e.xpath('div/div/a/p[1]/span/text()')[0].strip()
-        if '$' in ePrice: 
-            ePrice = re.split("\\$", ePrice)[1]
-        else:
-            ePrice = re.split("Price: ", ePrice)[1]
-        print(f'Price: ${ePrice}')
 
-        # Product Time
-        eTimeRoot = e.xpath('div/div/a/p[2]')
-        eTimeutc = datetime.strptime(eTimeRoot[0].text, '%m/%d/%Y %I:%M %p')
+        # Product Date
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[0]
+        eTimeRoot = e[0]
+        eTimeutc = datetime.strptime(eTimeRoot.text, '%m/%d/%Y %I:%M %p')
         eTimeutc = eTimeutc.replace(tzinfo=from_zone) # Tell the datetime object that it's in UTC time zone since datetime objects are 'naive' by default
         elementTimestamp = eTimeutc.astimezone(to_zone) # Convert time zone
         strElementTimestamp = elementTimestamp.strftime("%m/%d/%Y %I:%M %p")
-        eTimeRoot[0].text = strElementTimestamp # see if the first element in the list is the same as the last time
+        eTimeRoot = strElementTimestamp # see if the first element in the list is the same as the last time
+        print(f'Date: {eTimeRoot}')
 
         # Product SKU
-        eSkuRoot = e.xpath('div/div/a/p[3]')
-        eSku = str(etree.tostring(eSkuRoot[0]), 'utf-8')
-        eSku = re.split("</p>", re.split("</strong>", eSku)[1])[0]
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[1]
+        eSkuRoot = e[1]
+        eSku = eSkuRoot.text.strip()
         print(f'SKU: {eSku}')
 
+        # Product Vintage
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[2]
+        eVintageRoot = e[2]
+        eVintage = eVintageRoot.text.strip()
+        print(f'Vintage: {eVintage}')
+
+        # Product Item Name
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[3]
+        eNameRoot = e[3]
+        eNameHref = eNameRoot[0].get('href')
+        eName = eNameRoot[0].text
+        print(f'Name: {eName}')
+        
+        # Product List Price
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[4]
+        ePriceRoot = e[4]
+        ePrice = ePriceRoot.text.strip()
+        print(f'Price: {ePrice}')
+
         # Product Quantity On Hand
-        eQtyRoot = e.xpath('div/div/a/p[4]/span')
-        eQty = str(etree.tostring(eQtyRoot[0]), 'utf-8')            
-        #eQty = re.split('&#13;\n', eQty)[1].strip()
+        #//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody/tr[e]/td[5]
+        eQtyRoot = e[5]
+        eQty = eQtyRoot.text           
         if '\n' in eQty: eQty = re.split('\n', eQty)[1].strip()
-        if '&gt; ' in eQty: eQty = re.split('&gt; ', eQty)[1].strip()
+        if '>' in eQty: eQty = re.split('> ', eQty)[1].strip()
         if '&#13;' in eQty: eQty = re.split('&#13;', eQty)[0].strip()
         if 'sold' in eQty.lower(): eQty = '0'
         if 'sp' in eQty.lower(): eQty = '666'
         print(f'QoH: {eQty}')
+        
+        print('')
+
+        # Product Allocation
         
         #if there's nothing on hand, skip it
         if eQty == '0': continue
 
         # Raw product html with updated timestamp
         eProduct = str(etree.tostring(e), 'utf-8')
+        #print(f'Product: {eProduct}')
 
         # Products that we will use to update the file db
         updateProducts[eSku] = {'name': eName, 'price': ePrice, 'qty': eQty, 'time': strElementTimestamp, 'product' : eProduct}
@@ -200,7 +224,7 @@ def GetDistilledList():
         # Check to see if we have anything to send
         for lastSku in lastProducts.keys():
             if eSku == lastSku:
-                print(f"Seen before, checking quantity...")
+                print("Seen before, checking quantity...")
                 lastQty = lastProducts[lastSku].get('qty','0')
                 #if int(eQty) > 0 and int(eQty) <= qtyThreshold and int(lastQty) > qtyThreshold:
                 if int(eQty) > 0 and int(lastQty) <= 0:
@@ -212,7 +236,7 @@ def GetDistilledList():
         if newProduct or thresholdMet:
             thisProducts[eSku] = {'name': eName, 'price': ePrice, 'qty': eQty, 'time': strElementTimestamp, 'product': eProduct}
             productCount +=1
-            print(f'{productCount} of {elementCount} added to thisProducts')
+            print(f'{productCount} of {eCount} added to thisProducts')
             
     # Update output first with lastProducts, then with thisProducts
     output.update(lastProducts)
@@ -234,7 +258,7 @@ def GetDistilledList():
         htmlString = htmlHeader + str(products) + htmlFooter
         printing(f'thisRun    : {startTime.strftime("%m/%d/%Y %I:%M %p")}\nlastRun    : {lastRunTimestamp.strftime("%m/%d/%Y %I:%M %p")}\n')
         printing(f'Last check at {lastRun}:')
-        printing(f'{productCount} out of {elementCount} products are new in the last {timeSpan.total_seconds()/60:.2f} minutes')
+        printing(f'{productCount} out of {eCount} products are new in the last {timeSpan.total_seconds()/60:.2f} minutes')
         printing(f'found {productCount} products to send')
         return htmlString
     else:
@@ -242,7 +266,7 @@ def GetDistilledList():
         #print(OFContent)
         OF.write(OFContent)
         print(f'Last check at {lastRun}:')
-        print(f'{productCount} out of {elementCount} products are new in the last {timeSpan.total_seconds()/60:.2f} minutes')
+        print(f'{productCount} out of {eCount} products are new in the last {timeSpan.total_seconds()/60:.2f} minutes')
         print(f'nothing to send!')
         return None
 
