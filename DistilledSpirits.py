@@ -25,6 +25,7 @@
 #             still need to put the refine search into a variable and feed it into the file... 
 # 20200513    modified the eQty filters to support new qoh (Sp O) value from the site
 # 20211002    Site updated, so had to make changes to support the updates. 
+# 20220531    updated API Key for sending emails. 
 #
 # -----------------------------------------------------------------------------
 # Imports
@@ -96,11 +97,11 @@ timeSpan = startTime - lastRunTimestamp
 lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
 
 # email setup
-apiKey = os.environ.get('SENDGRID_API_KEY', None)
-sender = 'Shaq <shaq@emruz.com>'
-receiver = ['shahinpirooz@gmail.com']
+apiKey = os.environ.get('SG_APIK', None)
+sender = 'Shaq <shaq@pirooz.net>'
+#receiver = ['shahinpirooz@gmail.com']
 #receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com','eanagel@gmail.com']
-receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com','eanagel@gmail.com']
+receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','leo@performmedia.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com']
 subject = "Shaq's Distilled List - {}".format(startTime.strftime("%b %d, %Y %I:%M %p"))
 
 # =============================================================================
