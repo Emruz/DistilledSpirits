@@ -1,1 +1,2 @@
-c:\Conda\python.exe "C:\Users\Shahin Pirooz\Projects\DistilledSpirits\DistilledSpirits.py" >> "C:\Users\Shahin Pirooz\Projects\DistilledSpirits\getDistilledList.log
+C:\Users\shahi\Projects\DistilledSpirits\venv\Scripts\activate.bat
+python "C:\Users\shahi\Projects\DistilledSpirits\DistilledSpirits.py" >> "C:\Users\shahi\Projects\DistilledSpirits\getDistilledList.log

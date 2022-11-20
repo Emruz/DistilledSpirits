@@ -1,4 +1,5 @@
-#!/opt/anaconda3/bin/python
+#!/$HOME/Projects/DistilledSpirits/venv/bin/python
+#!/$HOMEPATH/Projects/DistilledSpirits/venv/bin/python
 # -*- coding: utf-8 -*-
 # =============================================================================
 """
@@ -46,13 +47,13 @@ testSpan = 0
 qtyThreshold = 5
 
 if platform.system() == 'Windows':
-    outfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/DSList.out"
-    logfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/DSList.log"
-    touchfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/touch.file"
-    productsfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/products.out"
-    headerfile1 = "/Users/Shahin Pirooz/Projects/DistilledSpirits/htmlHeaderTop.html"
-    headerfile2 = "/Users/Shahin Pirooz/Projects/DistilledSpirits/htmlHeaderBottom.html"
-    footerfile = "/Users/Shahin Pirooz/Projects/DistilledSpirits/htmlFooter.html"
+    outfile = "/Users/shahi/Projects/DistilledSpirits/DSList.out"
+    logfile = "/Users/shahi/Projects/DistilledSpirits/DSList.log"
+    touchfile = "/Users/shahi/Projects/DistilledSpirits/touch.file"
+    productsfile = "/Users/shahi/Projects/DistilledSpirits/products.out"
+    headerfile1 = "/Users/shahi/Projects/DistilledSpirits/htmlHeaderTop.html"
+    headerfile2 = "/Users/shahi/Projects/DistilledSpirits/htmlHeaderBottom.html"
+    footerfile = "/Users/shahi/Projects/DistilledSpirits/htmlFooter.html"
 else:
     outfile = "/Users/shahin/Projects/DistilledSpirits/DSList.out"
     logfile = "/Users/shahin/Projects/DistilledSpirits/DSList.log"
@@ -97,7 +98,7 @@ timeSpan = startTime - lastRunTimestamp
 lastRunTimestamp = lastRunTimestamp.astimezone(to_zone)
 
 # email setup
-apiKey = os.environ.get('SG_APIK', None)
+apiKey = os.environ.get('SGK', None)
 sender = 'Shaq <shaq@pirooz.net>'
 #receiver = ['shahinpirooz@gmail.com']
 #receiver = ['shahin@pirooz.net','jpapier@wrpwealth.com','lpolanowski@yahoo.com','sjsantandrea@gmail.com','scott@stephensongroup.net','joe.dickens@k-n-j.com','eanagel@gmail.com']
