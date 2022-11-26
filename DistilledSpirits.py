@@ -136,10 +136,12 @@ def GetDistilledList():
     products = ""
 
     # -------------------------------------------------------------------------
-    #requestHeaders = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
-    requestHeaders = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/600.7.12 (KHTML, like Gecko) Version/8.0.7 Safari/600.7.12'}
+    requestHeaders = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/50.0.2661.102 Safari/537.36'}
+    #requestHeaders = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_4) AppleWebKit/600.7.12 (KHTML, like Gecko) Version/8.0.7 Safari/600.7.12'}
     page = requests.get(url, headers=requestHeaders)
     tree = html.fromstring(page.content)
+    # /html/body/div[2]/div/div[1]/div/div/div[2]/div[2]/div[3]/div/table/tbody
+    # //*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody
     productList = tree.xpath('//*[@id="page-content"]/div[2]/div[2]/div[3]/div/table/tbody')[0]
     
     #page-content > div.clearfix > div.col-b > div.new-product-feed.content > div > table > tbody
