@@ -1,7 +1,0 @@
-lxml
-requests
-requests_html
-http
-datetime
-python-dateutil
-sendgrid
