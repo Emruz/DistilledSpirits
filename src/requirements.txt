@@ -1,11 +1,7 @@
 
 datetime
 python-dateutil
-jsonlib
 lxml
-os
-platform
-re
-requests_http
+os-sys 2.1.4
+requests
 sendgrid
-time
