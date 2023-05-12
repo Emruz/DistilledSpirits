@@ -1,7 +1,9 @@
 lxml
+datetime
 requests
 requests_html
-http
-datetime
 python-dateutil
 sendgrid
+cfscrape
+beautifulsoup4
+selenium
